@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小學數學雙能大挑戰 - 乘法與通分旗艦版</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'Fredoka', 'sans-serif'],
+                        game: ['Fredoka', '"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            yellow: '#FFCB05',
+                            blue: '#2A75BB',
+                            darkblue: '#3C5AA6',
+                            red: '#FF5350',
+                            green: '#4CAF50',
+                            purple: '#9C27B0',
+                        }
+                    },
+                    animation: {
+                        'bounce-short': 'bounceShort 0.4s ease-in-out',
+                        'shake': 'shake 0.4s ease-in-out',
+                        'float-up': 'floatUp 0.8s ease-out forwards',
+                        'pulse-glow': 'pulseGlow 1.5s infinite',
+                    },
+                    keyframes: {
+                        bounceShort: {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.15)' },
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '20%, 60%': { transform: 'translateX(-8px)' },
+                            '40%, 80%': { transform: 'translateX(8px)' },
+                        },
+                        floatUp: {
+                            '0%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                            '100%': { opacity: '0', transform: 'translateY(-40px) scale(1.3)' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.6))' },
+                            '50%': { filter: 'drop-shadow(0 0 15px rgba(251, 191, 36, 0.9))' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #fce7f3 100%);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.93);
+            backdrop-filter: blur(14px);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+
+        .game-btn {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        .game-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Fraction styling */
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0 4px;
+        }
+        .fraction-numerator {
+            border-bottom: 3px solid currentColor;
+            padding-bottom: 2px;
+        }
+        .fraction-denominator {
+            padding-top: 2px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800 antialiased font-sans">
+    
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Top Navigation Header -->
+    <header class="w-full bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-amber-200/50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showMainMenu()">
+                <div class="bg-gradient-to-tr from-amber-400 to-amber-500 text-white w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-xl shadow-md transform -rotate-3 hover:rotate-0 transition">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+                        小學數學雙能大挑戰
+                        <span class="text-xs bg-amber-100 text-amber-700 px-2.5 py-0.5 rounded-full font-bold hidden sm:inline-block">旗艦升級版</span>
+                    </h1>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="sound-toggle-btn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center gap-1.5 text-sm" title="開啟/靜音音效">
+                    <i class="fa-solid fa-volume-high text-amber-500" id="sound-icon"></i>
+                    <span class="hidden sm:inline" id="sound-text">音效開啟</span>
+                </button>
+
+                <button onclick="showAchievementsModal()" class="p-2.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold transition flex items-center gap-1.5 text-sm">
+                    <i class="fa-solid fa-award text-purple-500"></i>
+                    <span class="hidden sm:inline">成就勳章</span>
+                </button>
+
+                <button onclick="showHighScores()" class="p-2.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold transition flex items-center gap-1.5 text-sm">
+                    <i class="fa-solid fa-trophy text-amber-500"></i>
+                    <span class="hidden sm:inline">排行榜</span>
+                </button>
+
+                <button onclick="showMainMenu()" class="p-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition flex items-center gap-1.5 text-sm">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="hidden sm:inline">主選單</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+        <!-- 1. MAIN MENU SELECTION VIEW -->
+        <section id="view-main-menu" class="space-y-6 animate-fade-in">
+            <!-- Banner Hero -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 text-center bg-gradient-to-r from-amber-400/20 via-sky-400/20 to-purple-400/20 border-2 border-white/80 shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl mx-auto space-y-3">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-amber-500 text-white rounded-full text-xs sm:text-sm font-black tracking-wider uppercase shadow-sm">
+                        <span>⚡ 趣味雙能特訓班</span>
+                        <span id="player-avatar-preview" class="cursor-pointer bg-white/20 px-2 py-0.5 rounded-full" onclick="openAvatarSelector()">🤖 智多星</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
+                        歡迎來到數學大冒險！
+                    </h2>
+                    <p class="text-slate-600 text-base sm:text-lg font-medium">
+                        選擇練習單元與難度，精通「九九乘法」與「異分母通分」，挑戰限時高分！
+                    </p>
+                </div>
+            </div>
+
+            <!-- Game Mode Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- GAME 1 CARD: MULTIPLICATION -->
+                <div class="glass-card rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 border-2 border-amber-200 flex flex-col justify-between relative group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-xl text-xs font-bold">核心單元 1</span>
+                            <i class="fa-solid fa-xmark text-3xl text-amber-400 group-hover:scale-125 transition-transform duration-300"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                                九九乘法大挑戰
+                            </h3>
+                            <p class="text-slate-600 text-sm mt-1">
+                                熟練 1x1 至 9x9 乘法表，培養心算反應力與快速對答！
+                            </p>
+                        </div>
+
+                        <!-- Options for Multiplication -->
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">選擇難度組別</label>
+                                <div class="grid grid-cols-2 gap-2" id="mult-diff-select">
+                                    <button onclick="setDifficulty('mult', 'basic')" class="diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-amber-400 bg-white text-slate-700 transition" data-val="basic">
+                                        🌱 基礎 (2,5 乘法)
+                                    </button>
+                                    <button onclick="setDifficulty('mult', 'inter')" class="diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-amber-400 bg-white text-slate-700 transition" data-val="inter">
+                                        🌿 進階 (3,4,6 乘法)
+                                    </button>
+                                    <button onclick="setDifficulty('mult', 'adv')" class="diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-amber-400 bg-white text-slate-700 transition" data-val="adv">
+                                        🔥 高手 (7,8,9 乘法)
+                                    </button>
+                                    <button onclick="setDifficulty('mult', 'all')" class="diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-amber-500 bg-amber-500 text-white shadow-md active" data-val="all">
+                                        ⚡ 全能 (1-9 全套)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">時間限制</label>
+                                    <select id="mult-time-select" class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-amber-400 outline-none">
+                                        <option value="30">⏱️ 30 秒疾速模式</option>
+                                        <option value="60" selected>⏱️ 60 秒標準模式</option>
+                                        <option value="0">♾️ 無時間限制</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">作答方式</label>
+                                    <select id="mult-input-select" class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-amber-400 outline-none">
+                                        <option value="choice" selected>🎯 四選一單選</option>
+                                        <option value="numpad">🔢 數字鍵盤輸入</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="startMultiplicationGame()" class="w-full mt-6 py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white font-black text-lg rounded-2xl shadow-lg hover:shadow-amber-200 transition game-btn flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> 開始乘法大挑戰
+                    </button>
+                </div>
+
+                <!-- GAME 2 CARD: FRACTION COMMON DENOMINATOR -->
+                <div class="glass-card rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 border-2 border-sky-200 flex flex-col justify-between relative group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <span class="px-3 py-1 bg-sky-100 text-sky-800 rounded-xl text-xs font-bold">核心單元 2</span>
+                            <i class="fa-solid fa-chart-pie text-3xl text-sky-400 group-hover:scale-125 transition-transform duration-300"></i>
+                        </div>
+
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800 flex items-center gap-2">
+                                異分母通分大挑戰
+                            </h3>
+                            <p class="text-slate-600 text-sm mt-1">
+                                尋找兩個異分母分數的「最小公分母 (LCM)」，搭配動態圖解！
+                            </p>
+                        </div>
+
+                        <!-- Options for Fractions -->
+                        <div class="space-y-3 pt-2">
+                            <div>
+                                <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">選擇難度組別</label>
+                                <div class="grid grid-cols-2 gap-2" id="frac-diff-select">
+                                    <button onclick="setDifficulty('frac', 'basic')" class="diff-btn-frac p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-sky-500 bg-sky-500 text-white shadow-md active" data-val="basic">
+                                        🌱 基礎 (分母 ≤ 10)
+                                    </button>
+                                    <button onclick="setDifficulty('frac', 'adv')" class="diff-btn-frac p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-sky-400 bg-white text-slate-700 transition" data-val="adv">
+                                        🔥 高手 (分母 ≤ 16)
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">時間限制</label>
+                                    <select id="frac-time-select" class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-sky-400 outline-none">
+                                        <option value="30">⏱️ 30 秒疾速模式</option>
+                                        <option value="60" selected>⏱️ 60 秒標準模式</option>
+                                        <option value="0">♾️ 無時間限制</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-extrabold text-slate-500 uppercase mb-1">圖解樣式</label>
+                                    <select id="frac-visual-select" class="w-full p-2.5 text-xs sm:text-sm font-bold bg-slate-50 border-2 border-slate-200 rounded-xl focus:border-sky-400 outline-none">
+                                        <option value="bar" selected>📊 分數條 (Fraction Bar)</option>
+                                        <option value="pie">🥧 圓餅圖 (Pie Chart)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="startFractionGame()" class="w-full mt-6 py-3.5 bg-gradient-to-r from-sky-400 to-sky-500 hover:from-sky-500 hover:to-sky-600 text-white font-black text-lg rounded-2xl shadow-lg hover:shadow-sky-200 transition game-btn flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-play"></i> 開始通分大挑戰
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 2. ACTIVE GAMEPLAY VIEW -->
+        <section id="view-gameplay" class="hidden space-y-4 max-w-2xl mx-auto w-full animate-fade-in">
+            
+            <!-- Game HUD Status Bar -->
+            <div class="glass-card rounded-2xl p-4 flex items-center justify-between border-2 border-slate-100 shadow-md relative overflow-hidden">
+                <!-- Score Counter -->
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-100 text-amber-700 w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">目前得分</div>
+                        <div id="game-score" class="text-2xl font-black text-slate-800">0</div>
+                    </div>
+                </div>
+
+                <!-- Streak / Combo Display -->
+                <div id="combo-container" class="opacity-0 transition-opacity flex items-center gap-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-3.5 py-1.5 rounded-2xl font-extrabold text-sm shadow-md animate-bounce-short">
+                    <i class="fa-solid fa-fire text-yellow-200"></i>
+                    <span id="combo-text">連勝 x0</span>
+                </div>
+
+                <!-- Timer Counter -->
+                <div class="flex items-center gap-3">
+                    <div id="timer-box" class="bg-sky-100 text-sky-700 w-10 h-10 rounded-xl flex items-center justify-center text-xl font-bold">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-400 uppercase">剩餘時間</div>
+                        <div id="game-timer" class="text-2xl font-black text-sky-600">60s</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timer Progress Bar -->
+            <div id="timer-bar-container" class="w-full bg-slate-200 h-3 rounded-full overflow-hidden shadow-inner">
+                <div id="timer-bar" class="bg-gradient-to-r from-amber-400 to-orange-500 h-full w-full transition-all duration-1000 ease-linear"></div>
+            </div>
+
+            <!-- Mascot Encouragement Tip Card -->
+            <div id="mascot-bar" class="bg-indigo-900/90 text-white rounded-2xl px-4 py-2.5 flex items-center gap-3 shadow-md">
+                <span id="mascot-icon" class="text-2xl">🤖</span>
+                <span id="mascot-text" class="text-xs sm:text-sm font-bold text-indigo-100">加油！仔細思考再回答喔！</span>
+            </div>
+
+            <!-- MAIN QUESTION CARD -->
+            <div id="question-card" class="glass-card rounded-3xl p-6 sm:p-8 text-center space-y-6 border-2 border-white shadow-xl relative overflow-hidden">
+                
+                <!-- Game Type Badge -->
+                <div class="flex justify-between items-center">
+                    <span id="game-badge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-extrabold">
+                        乘法模式
+                    </span>
+                    <span id="question-count" class="text-xs font-bold text-slate-400">
+                        已完成 0 題
+                    </span>
+                </div>
+
+                <!-- Dynamic Question Text / Display Area -->
+                <div id="question-display-area" class="py-2 flex items-center justify-center min-h-[140px]">
+                    <!-- Multiplication or Fraction UI injected here by JS -->
+                </div>
+
+                <!-- Hint Breakdown Box (For Fraction Common Denominator) -->
+                <div id="fraction-hint-box" class="hidden bg-sky-50/90 border-2 border-sky-200 rounded-2xl p-3.5 text-left space-y-1.5 text-xs sm:text-sm">
+                    <div class="font-extrabold text-sky-800 flex items-center gap-1.5">
+                        <i class="fa-regular fa-lightbulb text-amber-500"></i> 通分秘訣（倍數拆解）：
+                    </div>
+                    <div id="hint-m1" class="text-slate-600"></div>
+                    <div id="hint-m2" class="text-slate-600"></div>
+                    <div id="hint-lcm" class="font-bold text-sky-700 pt-1.5 border-t border-sky-200"></div>
+                </div>
+
+                <!-- Feedback Banner -->
+                <div id="feedback-banner" class="hidden py-2.5 px-4 rounded-2xl font-black text-center text-lg transform transition-all duration-200">
+                </div>
+
+                <!-- ANSWER INPUT AREA: Multiple Choice Buttons -->
+                <div id="input-choices-container" class="grid grid-cols-2 gap-3 sm:gap-4 pt-2">
+                    <button onclick="handleAnswerChoice(0)" class="choice-btn game-btn p-4 text-xl sm:text-2xl font-black rounded-2xl bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 hover:bg-amber-50 transition">
+                        -
+                    </button>
+                    <button onclick="handleAnswerChoice(1)" class="choice-btn game-btn p-4 text-xl sm:text-2xl font-black rounded-2xl bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 hover:bg-amber-50 transition">
+                        -
+                    </button>
+                    <button onclick="handleAnswerChoice(2)" class="choice-btn game-btn p-4 text-xl sm:text-2xl font-black rounded-2xl bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 hover:bg-amber-50 transition">
+                        -
+                    </button>
+                    <button onclick="handleAnswerChoice(3)" class="choice-btn game-btn p-4 text-xl sm:text-2xl font-black rounded-2xl bg-white border-2 border-slate-200 hover:border-amber-400 text-slate-800 hover:bg-amber-50 transition">
+                        -
+                    </button>
+                </div>
+
+                <!-- ANSWER INPUT AREA: Numpad Input Mode -->
+                <div id="input-numpad-container" class="hidden space-y-3 pt-2">
+                    <div class="flex items-center justify-center gap-2">
+                        <div id="numpad-display" class="w-48 py-2.5 px-4 bg-slate-100 border-2 border-slate-300 rounded-2xl text-2xl font-black text-slate-800 min-h-[48px] flex items-center justify-center tracking-widest shadow-inner">
+                            ?
+                        </div>
+                        <button onclick="clearNumpad()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-2xl text-sm transition">
+                            清除
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                        <button onclick="pressNumpad(1)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">1</button>
+                        <button onclick="pressNumpad(2)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">2</button>
+                        <button onclick="pressNumpad(3)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">3</button>
+                        <button onclick="pressNumpad(4)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">4</button>
+                        <button onclick="pressNumpad(5)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">5</button>
+                        <button onclick="pressNumpad(6)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">6</button>
+                        <button onclick="pressNumpad(7)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">7</button>
+                        <button onclick="pressNumpad(8)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">8</button>
+                        <button onclick="pressNumpad(9)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl">9</button>
+                        <button onclick="pressNumpad(0)" class="game-btn p-3 text-xl font-bold bg-white border-2 border-slate-200 rounded-xl col-span-2">0</button>
+                        <button onclick="submitNumpad()" class="game-btn p-3 text-xl font-black bg-amber-500 text-white rounded-xl">✓</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center pt-2">
+                <button onclick="showMainMenu()" class="text-xs font-bold text-slate-400 hover:text-slate-600 transition">
+                    ← 中途結束遊戲並返回主選單
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. RESULTS MODAL VIEW -->
+        <section id="view-results" class="hidden max-w-md mx-auto w-full animate-fade-in">
+            <div class="glass-card rounded-3xl p-6 sm:p-8 text-center space-y-6 border-2 border-white shadow-2xl">
+                
+                <div class="space-y-2">
+                    <span class="px-3.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-black uppercase">
+                        挑戰完成！
+                    </span>
+                    <h3 class="text-3xl font-black text-slate-800">
+                        成績結算單
+                    </h3>
+                </div>
+
+                <!-- Stars Rating -->
+                <div class="flex items-center justify-center gap-2 text-4xl text-amber-400 py-1">
+                    <i id="star-1" class="fa-solid fa-star"></i>
+                    <i id="star-2" class="fa-solid fa-star"></i>
+                    <i id="star-3" class="fa-solid fa-star"></i>
+                </div>
+
+                <!-- Final Stats Grid -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 grid grid-cols-2 gap-4 text-center">
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">最終得分</div>
+                        <div id="res-score" class="text-3xl font-black text-amber-500">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">正確率</div>
+                        <div id="res-accuracy" class="text-3xl font-black text-sky-500">0%</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">答對題數</div>
+                        <div id="res-correct" class="text-xl font-black text-slate-700">0 / 0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-400 uppercase">最高連勝</div>
+                        <div id="res-maxcombo" class="text-xl font-black text-orange-500">0 連勝</div>
+                    </div>
+                </div>
+
+                <div id="new-high-score-tag" class="hidden py-2 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl font-black text-sm">
+                    🎉 恭喜刷新的最高紀錄！
+                </div>
+
+                <div id="mistake-review-box" class="hidden text-left bg-rose-50 border border-rose-200 rounded-2xl p-3 max-h-48 overflow-y-auto space-y-2 text-xs">
+                    <div class="font-bold text-rose-800 border-b border-rose-200 pb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-book-open"></i> 錯題回顧與檢討：
+                    </div>
+                    <div id="mistake-list" class="space-y-1"></div>
+                </div>
+
+                <!-- Result Actions -->
+                <div class="space-y-3 pt-2">
+                    <button onclick="restartCurrentGame()" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-lg rounded-2xl shadow-lg transition game-btn flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> 再挑戰一次
+                    </button>
+                    <button onclick="showMainMenu()" class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-2xl transition">
+                        返回主選單
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. HIGH SCORES MODAL OVERLAY -->
+        <div id="modal-high-scores" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="glass-card rounded-3xl p-6 max-w-sm w-full space-y-4 border-2 border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> 最高紀錄榮譽榜
+                    </h3>
+                    <button onclick="hideHighScores()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <div class="font-extrabold text-amber-900 text-sm">九九乘法大挑戰</div>
+                            <div class="text-xs text-amber-700">最高得分紀錄</div>
+                        </div>
+                        <div id="hs-mult-score" class="text-2xl font-black text-amber-600">0</div>
+                    </div>
+
+                    <div class="p-3.5 bg-sky-50 border border-sky-200 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <div class="font-extrabold text-sky-900 text-sm">異分母通分大挑戰</div>
+                            <div class="text-xs text-sky-700">最高得分紀錄</div>
+                        </div>
+                        <div id="hs-frac-score" class="text-2xl font-black text-sky-600">0</div>
+                    </div>
+                </div>
+
+                <button onclick="resetHighScores()" class="w-full py-2 text-xs font-bold text-red-500 hover:text-red-700 transition text-center pt-2">
+                    清除所有最高紀錄
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. ACHIEVEMENTS MODAL OVERLAY -->
+        <div id="modal-achievements" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="glass-card rounded-3xl p-6 max-w-md w-full space-y-4 border-2 border-white shadow-2xl">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-award text-purple-500"></i> 成就勳章館
+                    </h3>
+                    <button onclick="hideAchievementsModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-1" id="badge-grid">
+                    <!-- Dynamic Badges Injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. AVATAR SELECTOR MODAL -->
+        <div id="modal-avatar" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="glass-card rounded-3xl p-6 max-w-sm w-full space-y-4 border-2 border-white shadow-2xl text-center">
+                <h3 class="text-xl font-black text-slate-800">選擇你的吉祥物搭檔</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="selectAvatar('🤖 智多星')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🤖</div>
+                        <div class="mt-1 text-xs">智多星</div>
+                    </button>
+                    <button onclick="selectAvatar('🦉 博士貓')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🦉</div>
+                        <div class="mt-1 text-xs">博士貓</div>
+                    </button>
+                    <button onclick="selectAvatar('🚀 探索號')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🚀</div>
+                        <div class="mt-1 text-xs">探索號</div>
+                    </button>
+                    <button onclick="selectAvatar('🦖 數學生物')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🦖</div>
+                        <div class="mt-1 text-xs">數學生物</div>
+                    </button>
+                    <button onclick="selectAvatar('🦊 飛快狐')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🦊</div>
+                        <div class="mt-1 text-xs">飛快狐</div>
+                    </button>
+                    <button onclick="selectAvatar('🐼 功夫熊')" class="p-3 bg-slate-100 hover:bg-amber-100 rounded-2xl border border-slate-200 font-bold text-sm">
+                        <div class="text-3xl">🐼</div>
+                        <div class="mt-1 text-xs">功夫熊</div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full py-4 text-center text-xs font-bold text-slate-400 border-t border-slate-200/50">
+        小學數學雙能大挑戰 &copy; 老師專用學生背誦與練習數位工具
+    </footer>
+
+    <script>
+        /* ==========================================================================
+           1. AUDIO SYNTHESIZER (Web Audio API)
+           ========================================================================== */
+        class SoundManager {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type = 'sine', duration = 0.1, startTime = 0, gainVal = 0.15) {
+                if (this.muted || !this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + startTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime + startTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + startTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + startTime);
+                    osc.stop(this.ctx.currentTime + startTime + duration);
+                } catch (e) {
+                    console.log("Audio play error", e);
+                }
+            }
+
+            playCorrect() {
+                this.init();
+                this.playTone(523.25, 'sine', 0.1, 0);       // C5
+                this.playTone(659.25, 'sine', 0.1, 0.08);    // E5
+                this.playTone(783.99, 'triangle', 0.2, 0.16); // G5
+            }
+
+            playWrong() {
+                this.init();
+                this.playTone(220, 'sawtooth', 0.15, 0, 0.12);  // A3
+                this.playTone(174.61, 'sawtooth', 0.25, 0.12, 0.12); // F3
+            }
+
+            playCombo() {
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'triangle', 0.1, idx * 0.06, 0.15);
+                });
+            }
+
+            playWin() {
+                this.init();
+                const melody = [
+                    { f: 523.25, d: 0.12, t: 0 },
+                    { f: 659.25, d: 0.12, t: 0.12 },
+                    { f: 783.99, d: 0.12, t: 0.24 },
+                    { f: 1046.50, d: 0.35, t: 0.36 }
+                ];
+                melody.forEach(n => this.playTone(n.f, 'triangle', n.d, n.t, 0.2));
+            }
+
+            playTick() {
+                this.init();
+                this.playTone(880, 'sine', 0.05, 0, 0.05);
+            }
+        }
+
+        const sound = new SoundManager();
+
+        function toggleSound() {
+            sound.muted = !sound.muted;
+            const icon = document.getElementById('sound-icon');
+            const text = document.getElementById('sound-text');
+            if (sound.muted) {
+                icon.className = 'fa-solid fa-volume-xmark text-slate-400';
+                text.innerText = '靜音中';
+            } else {
+                icon.className = 'fa-solid fa-volume-high text-amber-500';
+                text.innerText = '音效開啟';
+            }
+        }
+
+        /* ==========================================================================
+           2. GAME STATE & CONFIGURATION
+           ========================================================================== */
+        const gameState = {
+            mode: 'mult', // 'mult' or 'frac'
+            multDiff: 'all', // 'basic', 'inter', 'adv', 'all'
+            fracDiff: 'basic', // 'basic', 'adv'
+            fracVisual: 'bar', // 'bar' or 'pie'
+            timeLimit: 60, // 30, 60, or 0
+            inputMode: 'choice', // 'choice' or 'numpad'
+            avatar: '🤖 智多星',
+            
+            score: 0,
+            streak: 0,
+            maxStreak: 0,
+            correctCount: 0,
+            totalCount: 0,
+            mistakes: [],
+            
+            timeLeft: 60,
+            timerInterval: null,
+            currentQuestion: null,
+            numpadVal: '',
+            isLocked: false
+        };
+
+        const ACHIEVEMENTS = [
+            { id: 'first_play', title: '初出茅廬', desc: '完成首次挑戰', icon: '🌱' },
+            { id: 'streak_5', title: '連勝大師', desc: '達成 5 連勝', icon: '🔥' },
+            { id: 'score_1000', title: '千分霸主', desc: '單局總得分突破 1000 分', icon: '👑' },
+            { id: 'mult_perfect', title: '乘法大師', desc: '乘法模式獲得 100% 正確率', icon: '⚡' },
+            { id: 'frac_perfect', title: '通分專家', desc: '通分模式獲得 100% 正確率', icon: '📊' },
+            { id: 'fast_solver', title: '疾速解題手', desc: '於 30 秒模式答對 8 題以上', icon: '🚀' }
+        ];
+
+        // Math Helpers
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        function lcm(a, b) {
+            if (a === 0 || b === 0) return 0;
+            return Math.abs((a * b) / gcd(a, b));
+        }
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function shuffleArray(arr) {
+            const array = [...arr];
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /* ==========================================================================
+           3. UI NAVIGATION & SELECTION HANDLERS
+           ========================================================================== */
+        function setDifficulty(mode, val) {
+            if (mode === 'mult') {
+                gameState.multDiff = val;
+                document.querySelectorAll('.diff-btn-mult').forEach(btn => {
+                    if (btn.dataset.val === val) {
+                        btn.className = 'diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-amber-500 bg-amber-500 text-white shadow-md active';
+                    } else {
+                        btn.className = 'diff-btn-mult p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-amber-400 bg-white text-slate-700 transition';
+                    }
+                });
+            } else if (mode === 'frac') {
+                gameState.fracDiff = val;
+                document.querySelectorAll('.diff-btn-frac').forEach(btn => {
+                    if (btn.dataset.val === val) {
+                        btn.className = 'diff-btn-frac p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-sky-500 bg-sky-500 text-white shadow-md active';
+                    } else {
+                        btn.className = 'diff-btn-frac p-2.5 text-xs sm:text-sm rounded-xl font-bold border-2 border-slate-200 hover:border-sky-400 bg-white text-slate-700 transition';
+                    }
+                });
+            }
+        }
+
+        function showMainMenu() {
+            clearInterval(gameState.timerInterval);
+            document.getElementById('view-main-menu').classList.remove('hidden');
+            document.getElementById('view-gameplay').classList.add('hidden');
+            document.getElementById('view-results').classList.add('hidden');
+        }
+
+        function showHighScores() {
+            const scores = getHighScores();
+            document.getElementById('hs-mult-score').innerText = scores.mult || 0;
+            document.getElementById('hs-frac-score').innerText = scores.frac || 0;
+            document.getElementById('modal-high-scores').classList.remove('hidden');
+        }
+
+        function hideHighScores() {
+            document.getElementById('modal-high-scores').classList.add('hidden');
+        }
+
+        function getHighScores() {
+            try {
+                return JSON.parse(localStorage.getItem('math_dual_highscores')) || { mult: 0, frac: 0 };
+            } catch (e) {
+                return { mult: 0, frac: 0 };
+            }
+        }
+
+        function saveHighScore(mode, score) {
+            const scores = getHighScores();
+            if (!scores[mode] || score > scores[mode]) {
+                scores[mode] = score;
+                localStorage.setItem('math_dual_highscores', JSON.stringify(scores));
+                return true;
+            }
+            return false;
+        }
+
+        function resetHighScores() {
+            localStorage.removeItem('math_dual_highscores');
+            showHighScores();
+        }
+
+        /* Avatar Selection */
+        function openAvatarSelector() {
+            document.getElementById('modal-avatar').classList.remove('hidden');
+        }
+
+        function selectAvatar(avatar) {
+            gameState.avatar = avatar;
+            document.getElementById('player-avatar-preview').innerText = avatar;
+            document.getElementById('modal-avatar').classList.add('hidden');
+        }
+
+        /* Achievements Logic */
+        function getUnlockedAchievements() {
+            try {
+                return JSON.parse(localStorage.getItem('math_dual_achievements')) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function unlockAchievement(id) {
+            const unlocked = getUnlockedAchievements();
+            if (!unlocked.includes(id)) {
+                unlocked.push(id);
+                localStorage.setItem('math_dual_achievements', JSON.stringify(unlocked));
+            }
+        }
+
+        function showAchievementsModal() {
+            const unlocked = getUnlockedAchievements();
+            const grid = document.getElementById('badge-grid');
+            grid.innerHTML = '';
+
+            ACHIEVEMENTS.forEach(badge => {
+                const isUnlocked = unlocked.includes(badge.id);
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-2xl border text-center transition flex flex-col items-center justify-center gap-1 ${
+                    isUnlocked ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-sm' : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+                }`;
+                el.innerHTML = `
+                    <div class="text-3xl">${badge.icon}</div>
+                    <div class="font-black text-xs mt-1">${badge.title}</div>
+                    <div class="text-[10px] leading-tight">${badge.desc}</div>
+                    <span class="mt-1 text-[9px] px-2 py-0.5 rounded-full font-extrabold ${isUnlocked ? 'bg-amber-200 text-amber-800' : 'bg-slate-200 text-slate-500'}">
+                        ${isUnlocked ? '已解鎖' : '未解鎖'}
+                    </span>
+                `;
+                grid.appendChild(el);
+            });
+
+            document.getElementById('modal-achievements').classList.remove('hidden');
+        }
+
+        function hideAchievementsModal() {
+            document.getElementById('modal-achievements').classList.add('hidden');
+        }
+
+        /* ==========================================================================
+           4. QUESTION GENERATORS
+           ========================================================================== */
+        function generateMultiplicationQuestion() {
+            let a, b;
+            const diff = gameState.multDiff;
+
+            if (diff === 'basic') {
+                const pool = [2, 5];
+                a = pool[getRandomInt(0, pool.length - 1)];
+                b = getRandomInt(1, 9);
+            } else if (diff === 'inter') {
+                const pool = [3, 4, 6];
+                a = pool[getRandomInt(0, pool.length - 1)];
+                b = getRandomInt(1, 9);
+            } else if (diff === 'adv') {
+                const pool = [7, 8, 9];
+                a = pool[getRandomInt(0, pool.length - 1)];
+                b = getRandomInt(1, 9);
+            } else {
+                a = getRandomInt(1, 9);
+                b = getRandomInt(1, 9);
+            }
+
+            if (Math.random() > 0.5) {
+                [a, b] = [b, a];
+            }
+
+            const correctAnswer = a * b;
+            
+            const distractors = new Set();
+            while (distractors.size < 3) {
+                let offset = getRandomInt(-5, 5);
+                let cand = correctAnswer + offset;
+                if (cand > 0 && cand !== correctAnswer) distractors.add(cand);
+                
+                let alt1 = (a + getRandomInt(-1, 1)) * b;
+                if (alt1 > 0 && alt1 !== correctAnswer) distractors.add(alt1);
+                let alt2 = a * (b + getRandomInt(-1, 1));
+                if (alt2 > 0 && alt2 !== correctAnswer) distractors.add(alt2);
+            }
+
+            const choices = shuffleArray([correctAnswer, ...Array.from(distractors).slice(0, 3)]);
+
+            return {
+                type: 'mult',
+                num1: a,
+                num2: b,
+                answer: correctAnswer,
+                choices: choices
+            };
+        }
+
+        function generateFractionQuestion() {
+            const diff = gameState.fracDiff;
+            let d1, d2;
+
+            if (diff === 'basic') {
+                do {
+                    d1 = getRandomInt(2, 9);
+                    d2 = getRandomInt(2, 10);
+                } while (d1 === d2);
+            } else {
+                do {
+                    d1 = getRandomInt(3, 14);
+                    d2 = getRandomInt(4, 16);
+                } while (d1 === d2);
+            }
+
+            const n1 = getRandomInt(1, d1 - 1);
+            const n2 = getRandomInt(1, d2 - 1);
+            const answer = lcm(d1, d2);
+
+            const distractors = new Set();
+            distractors.add(d1 * d2);
+            distractors.add(d1 + d2);
+            if (answer - d1 > 0) distractors.add(answer - d1);
+            distractors.add(answer + d2);
+            distractors.add(answer * 2);
+
+            distractors.delete(answer);
+            
+            const choicesArray = Array.from(distractors).filter(x => x > 0 && x !== answer);
+            const choices = shuffleArray([answer, ...choicesArray.slice(0, 3)]);
+
+            return {
+                type: 'frac',
+                n1, d1,
+                n2, d2,
+                answer: answer,
+                choices: choices
+            };
+        }
+
+        /* ==========================================================================
+           5. SVG VISUAL FRACTION DIAGRAM GENERATORS
+           ========================================================================== */
+        function renderFractionSVG(n, d, colorHex, visualType = 'bar') {
+            if (visualType === 'pie') {
+                // Pie Chart SVG
+                const size = 64;
+                const r = 28;
+                const cx = 32;
+                const cy = 32;
+                let paths = '';
+
+                for (let i = 0; i < d; i++) {
+                    const startAngle = (i * 360 / d) * (Math.PI / 180);
+                    const endAngle = ((i + 1) * 360 / d) * (Math.PI / 180);
+
+                    const x1 = cx + r * Math.sin(startAngle);
+                    const y1 = cy - r * Math.cos(startAngle);
+                    const x2 = cx + r * Math.sin(endAngle);
+                    const y2 = cy - r * Math.cos(endAngle);
+
+                    const largeArc = (360 / d) > 180 ? 1 : 0;
+                    const isFilled = i < n;
+                    const fill = isFilled ? colorHex : '#f1f5f9';
+
+                    paths += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="${fill}" stroke="#cbd5e1" stroke-width="1.5" />`;
+                }
+
+                return `
+                    <svg width="${size}" height="${size}" class="inline-block drop-shadow-sm">
+                        ${paths}
+                    </svg>
+                `;
+            } else {
+                // Fraction Bar SVG
+                const totalWidth = 130;
+                const height = 22;
+                const partWidth = totalWidth / d;
+
+                let rects = '';
+                for (let i = 0; i < d; i++) {
+                    const x = i * partWidth;
+                    const isFilled = i < n;
+                    const fill = isFilled ? colorHex : '#f1f5f9';
+                    rects += `<rect x="${x}" y="0" width="${partWidth}" height="${height}" fill="${fill}" stroke="#cbd5e1" stroke-width="1.5" rx="2" />`;
+                }
+
+                return `
+                    <svg width="${totalWidth}" height="${height}" class="inline-block rounded-md overflow-hidden shadow-inner">
+                        ${rects}
+                    </svg>
+                `;
+            }
+        }
+
+        /* ==========================================================================
+           6. GAMEPLAY CONTROLLER & EVENT LOOPS
+           ========================================================================== */
+        function startMultiplicationGame() {
+            gameState.mode = 'mult';
+            gameState.timeLimit = parseInt(document.getElementById('mult-time-select').value);
+            gameState.inputMode = document.getElementById('mult-input-select').value;
+            initGame();
+        }
+
+        function startFractionGame() {
+            gameState.mode = 'frac';
+            gameState.timeLimit = parseInt(document.getElementById('frac-time-select').value);
+            gameState.fracVisual = document.getElementById('frac-visual-select').value;
+            gameState.inputMode = 'choice';
+            initGame();
+        }
+
+        function initGame() {
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.maxStreak = 0;
+            gameState.correctCount = 0;
+            gameState.totalCount = 0;
+            gameState.mistakes = [];
+            gameState.timeLeft = gameState.timeLimit;
+            gameState.isLocked = false;
+
+            document.getElementById('view-main-menu').classList.add('hidden');
+            document.getElementById('view-results').classList.add('hidden');
+            document.getElementById('view-gameplay').classList.remove('hidden');
+
+            // Set mascot avatar
+            const [emoji, name] = gameState.avatar.split(' ');
+            document.getElementById('mascot-icon').innerText = emoji;
+            document.getElementById('mascot-text').innerText = `${name}：「加油！冷靜思考，衝高分吧！」`;
+
+            if (gameState.inputMode === 'numpad' && gameState.mode === 'mult') {
+                document.getElementById('input-choices-container').classList.add('hidden');
+                document.getElementById('input-numpad-container').classList.remove('hidden');
+                clearNumpad();
+            } else {
+                document.getElementById('input-choices-container').classList.remove('hidden');
+                document.getElementById('input-numpad-container').classList.add('hidden');
+            }
+
+            const badge = document.getElementById('game-badge');
+            if (gameState.mode === 'mult') {
+                badge.innerText = '九九乘法模式';
+                badge.className = 'px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-black';
+            } else {
+                badge.innerText = '異分母通分模式';
+                badge.className = 'px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-xs font-black';
+            }
+
+            updateHUD();
+            startTimer();
+            nextQuestion();
+        }
+
+        function startTimer() {
+            clearInterval(gameState.timerInterval);
+            const timerBarContainer = document.getElementById('timer-bar-container');
+            const timerDisplay = document.getElementById('game-timer');
+
+            if (gameState.timeLimit === 0) {
+                timerBarContainer.classList.add('hidden');
+                timerDisplay.innerText = '♾️ 自由練習';
+                return;
+            }
+
+            timerBarContainer.classList.remove('hidden');
+            updateTimerDisplay();
+
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft--;
+                updateTimerDisplay();
+
+                if (gameState.timeLeft <= 5 && gameState.timeLeft > 0) {
+                    sound.playTick();
+                }
+
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            if (gameState.timeLimit === 0) return;
+            const timerDisplay = document.getElementById('game-timer');
+            const timerBar = document.getElementById('timer-bar');
+            
+            timerDisplay.innerText = `${gameState.timeLeft}s`;
+            const pct = (gameState.timeLeft / gameState.timeLimit) * 100;
+            timerBar.style.width = `${pct}%`;
+
+            if (pct < 25) {
+                timerBar.className = 'bg-gradient-to-r from-red-500 to-rose-600 h-full w-full transition-all duration-1000 ease-linear';
+            } else {
+                timerBar.className = 'bg-gradient-to-r from-amber-400 to-orange-500 h-full w-full transition-all duration-1000 ease-linear';
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('game-score').innerText = gameState.score;
+            document.getElementById('question-count').innerText = `已完成 ${gameState.totalCount} 題`;
+
+            const comboContainer = document.getElementById('combo-container');
+            if (gameState.streak >= 2) {
+                comboContainer.classList.remove('opacity-0');
+                document.getElementById('combo-text').innerText = `連勝 x${gameState.streak}`;
+            } else {
+                comboContainer.classList.add('opacity-0');
+            }
+        }
+
+        function nextQuestion() {
+            gameState.isLocked = false;
+            document.getElementById('feedback-banner').className = 'hidden py-2 px-4 rounded-xl font-black text-center text-lg';
+
+            if (gameState.mode === 'mult') {
+                gameState.currentQuestion = generateMultiplicationQuestion();
+                renderMultiplicationQuestion();
+            } else {
+                gameState.currentQuestion = generateFractionQuestion();
+                renderFractionQuestion();
+            }
+
+            if (gameState.inputMode === 'numpad') {
+                clearNumpad();
+            }
+        }
+
+        function renderMultiplicationQuestion() {
+            const q = gameState.currentQuestion;
+            const displayArea = document.getElementById('question-display-area');
+            document.getElementById('fraction-hint-box').classList.add('hidden');
+
+            displayArea.innerHTML = `
+                <div class="space-y-3">
+                    <div class="text-4xl sm:text-6xl font-black text-slate-800 tracking-wider">
+                        ${q.num1} <span class="text-amber-500">×</span> ${q.num2} = <span class="text-amber-500 underline decoration-wavy">?</span>
+                    </div>
+                </div>
+            `;
+
+            if (gameState.inputMode === 'choice') {
+                const choiceBtns = document.querySelectorAll('.choice-btn');
+                q.choices.forEach((val, idx) => {
+                    choiceBtns[idx].innerText = val;
+                });
+            }
+        }
+
+        function renderFractionQuestion() {
+            const q = gameState.currentQuestion;
+            const displayArea = document.getElementById('question-display-area');
+            const hintBox = document.getElementById('fraction-hint-box');
+
+            const svg1 = renderFractionSVG(q.n1, q.d1, '#38bdf8', gameState.fracVisual);
+            const svg2 = renderFractionSVG(q.n2, q.d2, '#a855f7', gameState.fracVisual);
+
+            displayArea.innerHTML = `
+                <div class="space-y-4 w-full">
+                    <div class="text-base sm:text-lg font-bold text-slate-600">
+                        請找出這兩個分數的 <span class="text-sky-600 font-extrabold underline">最小公分母 (通分)</span>：
+                    </div>
+
+                    <div class="flex items-center justify-center gap-4 sm:gap-8 py-2">
+                        <!-- Fraction 1 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="fraction text-2xl sm:text-3xl font-black text-sky-600">
+                                <span class="fraction-numerator">${q.n1}</span>
+                                <span class="fraction-denominator">${q.d1}</span>
+                            </div>
+                            ${svg1}
+                        </div>
+
+                        <div class="text-2xl font-black text-slate-300">與</div>
+
+                        <!-- Fraction 2 -->
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="fraction text-2xl sm:text-3xl font-black text-purple-600">
+                                <span class="fraction-numerator">${q.n2}</span>
+                                <span class="fraction-denominator">${q.d2}</span>
+                            </div>
+                            ${svg2}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Hint setup
+            hintBox.classList.remove('hidden');
+            let m1 = [], m2 = [];
+            for(let i=1; i<=4; i++) {
+                m1.push(q.d1 * i);
+                m2.push(q.d2 * i);
+            }
+
+            document.getElementById('hint-m1').innerHTML = `分母 <b class="text-sky-600">${q.d1}</b> 的倍數: ${m1.join(', ')} ...`;
+            document.getElementById('hint-m2').innerHTML = `分母 <b class="text-purple-600">${q.d2}</b> 的倍數: ${m2.join(', ')} ...`;
+            document.getElementById('hint-lcm').innerHTML = `💡 最小公倍數 (最小公分母): <span class="text-amber-600 font-black">${q.answer}</span>`;
+
+            const choiceBtns = document.querySelectorAll('.choice-btn');
+            q.choices.forEach((val, idx) => {
+                choiceBtns[idx].innerText = val;
+            });
+        }
+
+        function handleAnswerChoice(index) {
+            if (gameState.isLocked) return;
+            const selectedVal = gameState.currentQuestion.choices[index];
+            checkAnswer(selectedVal);
+        }
+
+        function checkAnswer(userVal) {
+            if (gameState.isLocked) return;
+            gameState.isLocked = true;
+            gameState.totalCount++;
+
+            const isCorrect = parseInt(userVal) === gameState.currentQuestion.answer;
+            const banner = document.getElementById('feedback-banner');
+            const card = document.getElementById('question-card');
+            const [, name] = gameState.avatar.split(' ');
+
+            if (isCorrect) {
+                gameState.correctCount++;
+                gameState.streak++;
+                if (gameState.streak > gameState.maxStreak) {
+                    gameState.maxStreak = gameState.streak;
+                }
+
+                const streakMultiplier = Math.min(1 + (gameState.streak - 1) * 0.2, 2.5);
+                const pointsGained = Math.round(100 * streakMultiplier);
+                gameState.score += pointsGained;
+
+                if (gameState.streak >= 3) {
+                    sound.playCombo();
+                    document.getElementById('mascot-text').innerText = `${name}：「太厲害了！保持 ${gameState.streak} 連勝！」`;
+                } else {
+                    sound.playCorrect();
+                    document.getElementById('mascot-text').innerText = `${name}：「答對了！繼續保持喔！」`;
+                }
+
+                banner.className = 'py-2.5 px-4 rounded-2xl font-black text-center text-lg bg-emerald-100 text-emerald-800 border border-emerald-300 animate-bounce-short';
+                banner.innerText = `✨ 正確！+${pointsGained} 分 ${gameState.streak >= 2 ? `(${gameState.streak}連勝加成)` : ''}`;
+                
+                card.classList.add('border-emerald-400');
+                setTimeout(() => card.classList.remove('border-emerald-400'), 500);
+
+            } else {
+                gameState.streak = 0;
+                sound.playWrong();
+
+                // Track mistake
+                gameState.mistakes.push({
+                    question: gameState.mode === 'mult' 
+                        ? `${gameState.currentQuestion.num1} × ${gameState.currentQuestion.num2}`
+                        : `${gameState.currentQuestion.n1}/${gameState.currentQuestion.d1} 與 ${gameState.currentQuestion.n2}/${gameState.currentQuestion.d2} 通分`,
+                    userVal: userVal,
+                    correctVal: gameState.currentQuestion.answer
+                });
+
+                document.getElementById('mascot-text').innerText = `${name}：「沒關係！記住正確答案，下次一定會！」`;
+
+                banner.className = 'py-2.5 px-4 rounded-2xl font-black text-center text-lg bg-rose-100 text-rose-800 border border-rose-300 animate-shake';
+                banner.innerText = `❌ 答錯了！正確答案是 ${gameState.currentQuestion.answer}`;
+
+                card.classList.add('border-rose-400');
+                setTimeout(() => card.classList.remove('border-rose-400'), 500);
+            }
+
+            banner.classList.remove('hidden');
+            updateHUD();
+
+            setTimeout(() => {
+                nextQuestion();
+            }, isCorrect ? 600 : 1200);
+        }
+
+        /* Numpad Input Logic */
+        function pressNumpad(num) {
+            if (gameState.numpadVal.length < 3) {
+                gameState.numpadVal += num.toString();
+                updateNumpadDisplay();
+            }
+        }
+
+        function clearNumpad() {
+            gameState.numpadVal = '';
+            updateNumpadDisplay();
+        }
+
+        function updateNumpadDisplay() {
+            document.getElementById('numpad-display').innerText = gameState.numpadVal || '?';
+        }
+
+        function submitNumpad() {
+            if (!gameState.numpadVal || gameState.isLocked) return;
+            checkAnswer(parseInt(gameState.numpadVal));
+        }
+
+        /* ==========================================================================
+           7. GAME OVER, MISTAKES REVIEW & CONFETTI CELEBRATION
+           ========================================================================== */
+        function endGame() {
+            clearInterval(gameState.timerInterval);
+            sound.playWin();
+
+            document.getElementById('view-gameplay').classList.add('hidden');
+            document.getElementById('view-results').classList.remove('hidden');
+
+            const accuracy = gameState.totalCount > 0 ? Math.round((gameState.correctCount / gameState.totalCount) * 100) : 0;
+            
+            document.getElementById('res-score').innerText = gameState.score;
+            document.getElementById('res-accuracy').innerText = `${accuracy}%`;
+            document.getElementById('res-correct').innerText = `${gameState.correctCount} / ${gameState.totalCount}`;
+            document.getElementById('res-maxcombo').innerText = `${gameState.maxStreak} 連勝`;
+
+            // Stars
+            const star1 = document.getElementById('star-1');
+            const star2 = document.getElementById('star-2');
+            const star3 = document.getElementById('star-3');
+
+            star1.className = 'fa-solid fa-star text-amber-400';
+            star2.className = accuracy >= 60 ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-300';
+            star3.className = accuracy >= 85 && gameState.score >= 500 ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-300';
+
+            // High Score check
+            const isNewHigh = saveHighScore(gameState.mode, gameState.score);
+            const highTag = document.getElementById('new-high-score-tag');
+            if (isNewHigh && gameState.score > 0) {
+                highTag.classList.remove('hidden');
+            } else {
+                highTag.classList.add('hidden');
+            }
+
+            // Check Achievements
+            unlockAchievement('first_play');
+            if (gameState.maxStreak >= 5) unlockAchievement('streak_5');
+            if (gameState.score >= 1000) unlockAchievement('score_1000');
+            if (accuracy === 100 && gameState.totalCount >= 5) {
+                if (gameState.mode === 'mult') unlockAchievement('mult_perfect');
+                if (gameState.mode === 'frac') unlockAchievement('frac_perfect');
+            }
+            if (gameState.timeLimit === 30 && gameState.correctCount >= 8) {
+                unlockAchievement('fast_solver');
+            }
+
+            // Render mistakes if any
+            const mistakeBox = document.getElementById('mistake-review-box');
+            const mistakeList = document.getElementById('mistake-list');
+            if (gameState.mistakes.length > 0) {
+                mistakeBox.classList.remove('hidden');
+                mistakeList.innerHTML = gameState.mistakes.map(m => `
+                    <div class="flex items-center justify-between py-1 border-b border-rose-100/60 text-slate-700">
+                        <span>題目：<b>${m.question}</b></span>
+                        <span>你的回答：<span class="text-rose-600 font-bold">${m.userVal}</span> ｜ 正確：<span class="text-emerald-600 font-bold">${m.correctVal}</span></span>
+                    </div>
+                `).join('');
+            } else {
+                mistakeBox.classList.add('hidden');
+            }
+
+            triggerConfetti();
+        }
+
+        function restartCurrentGame() {
+            if (gameState.mode === 'mult') {
+                startMultiplicationGame();
+            } else {
+                startFractionGame();
+            }
+        }
+
+        /* Canvas Confetti Animation */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#8b5cf6'];
+
+            for (let i = 0; i < 90; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 14,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            let animationFrame;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.22;
+                        p.life--;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                if (alive) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            render();
+        }
+
+        /* Global Keyboard Listeners */
+        window.addEventListener('keydown', (e) => {
+            const gameplayView = document.getElementById('view-gameplay');
+            if (gameplayView.classList.contains('hidden')) return;
+
+            if (gameState.inputMode === 'choice') {
+                if (['1', '2', '3', '4'].includes(e.key)) {
+                    const idx = parseInt(e.key) - 1;
+                    handleAnswerChoice(idx);
+                }
+            } else if (gameState.inputMode === 'numpad') {
+                if (e.key >= '0' && e.key <= '9') {
+                    pressNumpad(parseInt(e.key));
+                } else if (e.key === 'Backspace') {
+                    clearNumpad();
+                } else if (e.key === 'Enter') {
+                    submitNumpad();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
